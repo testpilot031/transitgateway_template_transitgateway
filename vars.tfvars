@@ -1,0 +1,5 @@
+aws_region = "us-east-2"
+aws_az_1 = "us-east-2a"
+aws_az_2 = "us-east-2b"
+aws_az_3 = "us-east-2c"
+aws_target_rds_instance_class = "db.m5.2xlarge"
