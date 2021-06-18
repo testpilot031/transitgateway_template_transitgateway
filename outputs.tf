@@ -3,9 +3,11 @@
 # Outputs
 #
 # ====================
-output "alb_dns_name" {
-  value = tomap({
-    for v in aws_vpc.hoge : v.id => v
-  })
+output "firewall_status" {
+  value = aws_networkfirewall_firewall.example.firewall_status
 
 }
+
+# output "aws_vpc_endpoint" {
+#   value=data.aws_vpc_endpoint.firewall
+# }

@@ -1,3 +1,6 @@
+variable "network_address_range" {
+    default = "192.168.0.0/14"
+}
 variable "vpcs" {
   default = [
     { id = "inspection", cidr_block = "192.168.8.0/21", tags_Name = "inspection" },
@@ -109,7 +112,8 @@ variable "route_tables" {
   default = [
     { id = "main_hoge01-rt", vpc_id = "hoge01" },
     { id = "main_hoge03-rt", vpc_id = "hoge03" },
-    { id = "inspection-rt", vpc_id = "inspection" },
+    { id = "inspection-rt_az1", vpc_id = "inspection" },
+    { id = "inspection-rt_az2", vpc_id = "inspection" },
     { id = "firewall-rt", vpc_id = "inspection" },
     { id = "nat_tgw-rt", vpc_id = "hoge02" },
     { id = "igw_tgw-rt", vpc_id = "hoge02" },
@@ -117,38 +121,41 @@ variable "route_tables" {
 }
 variable "routes" {
   default = [
-    { route_table_id="main_hoge01-rt",id = "all_to_tgw_hoge01", cidr_block = "0.0.0.0/0", tgw_id = "tokyo" },
-    { route_table_id="main_hoge03-rt",id = "all_to_tgw_hoge03", cidr_block = "0.0.0.0/0", tgw_id = "tokyo" },
-    { route_table_id="inspection-rt",id = "all_to_tgw", cidr_block = "0.0.0.0/0", vpcep_id = "" },
-    { route_table_id="firewall-rt",id = "all_to_tgw", cidr_block = "0.0.0.0/0", tgw_id = "tokyo" },
-    { route_table_id="nat_tgw-rt",id = "all_to_tgw", cidr_block = "0.0.0.0/0", ngw_name = "example" },
-    { route_table_id="igw_tgw-rt",id = "all_to_tgw", cidr_block = "0.0.0.0/0", igw_name = "example" },
+    { route_table_id="main_hoge01-rt",id = "all_to_tgw_hoge01", cidr_block = "0.0.0.0/0", transit_gateway_id = "tokyo" },
+    { route_table_id="main_hoge03-rt",id = "all_to_tgw_hoge03", cidr_block = "0.0.0.0/0", transit_gateway_id = "tokyo" },
+    { route_table_id="inspection-rt_az1",id = "all_to_fw_inspection_az1", cidr_block = "0.0.0.0/0", fw_vpc_endpoint_index = 0 },
+    { route_table_id="inspection-rt_az2",id = "all_to_fw_inspection_az2", cidr_block = "0.0.0.0/0", fw_vpc_endpoint_index = 1 },
+    { route_table_id="firewall-rt",id = "all_to_tgw_inspection", cidr_block = "0.0.0.0/0", transit_gateway_id = "tokyo" },
+    { route_table_id="nat_tgw-rt",id = "all_to_ngw_hoge02", cidr_block = "0.0.0.0/0", nat_gateway_id = "example" },
+    { route_table_id="nat_tgw-rt",id = "some_to_tgw_hoge02_tx", cidr_block = "", transit_gateway_id = "tokyo"},
+    { route_table_id="igw_tgw-rt",id = "all_to_igw_hoge02", cidr_block = "0.0.0.0/0", gateway_id = "example" },
+    { route_table_id="igw_tgw-rt",id = "some_to_tgw_hoge02_pri", cidr_block = "", transit_gateway_id = "tokyo" }
   ]
 }
 variable "route_table_associations" {
   default = [
-    { subnet_id = "hoge01_pri01", route_table_id = "main_hoge01-rt" },
-    { subnet_id = "hoge01_pri02", route_table_id = "main_hoge01-rt" },
-    { subnet_id = "hoge01_tx01", route_table_id = "main_hoge01-rt" },
-    { subnet_id = "hoge01_tx02", route_table_id = "main_hoge01-rt" },
+    { id="1-1",subnet_id = "hoge01_pri01", route_table_id = "main_hoge01-rt" },
+    { id="1-2",subnet_id = "hoge01_pri02", route_table_id = "main_hoge01-rt" },
+    { id="1-3",subnet_id = "hoge01_tx01", route_table_id = "main_hoge01-rt" },
+    { id="1-4",subnet_id = "hoge01_tx02", route_table_id = "main_hoge01-rt" },
 
-    { subnet_id = "hoge02_pri01", route_table_id = "igw_tgw-rt" },
-    { subnet_id = "hoge02_pri01", route_table_id = "igw_tgw-rt" },
-    { subnet_id = "hoge02_tx01", route_table_id = "nat_tgw-rt" },
-    { subnet_id = "hoge02_tx01", route_table_id = "nat_tgw-rt" },
+    { id="2-1",subnet_id = "hoge02_pri01", route_table_id = "igw_tgw-rt" },
+    { id="2-2",subnet_id = "hoge02_pri01", route_table_id = "igw_tgw-rt" },
+    { id="2-3",subnet_id = "hoge02_tx01", route_table_id = "nat_tgw-rt" },
+    { id="2-4",subnet_id = "hoge02_tx01", route_table_id = "nat_tgw-rt" },
 
-    { subnet_id = "hoge03_pri01", route_table_id = "main_hoge03-rt" },
-    { subnet_id = "hoge03_pri02", route_table_id = "main_hoge03-rt" },
-    { subnet_id = "hoge03_tx01", route_table_id = "main_hoge03-rt" },
-    { subnet_id = "hoge03_tx02", route_table_id = "main_hoge03-rt" },
+    { id="3-1",subnet_id = "hoge03_pri01", route_table_id = "main_hoge03-rt" },
+    { id="3-2",subnet_id = "hoge03_pri02", route_table_id = "main_hoge03-rt" },
+    { id="3-3",subnet_id = "hoge03_tx01", route_table_id = "main_hoge03-rt" },
+    { id="3-4",subnet_id = "hoge03_tx02", route_table_id = "main_hoge03-rt" },
 
-    { subnet_id = "inspection_pri01", route_table_id = "firewall-rt"},
-    { subnet_id = "inspection_pri02", route_table_id = "firewall-rt"},
-    { subnet_id = "inspection_tx01", route_table_id = "inspection-rt" },
-    { subnet_id = "inspection_tx02", route_table_id = "inspection-rt" },
+    { id="4-1",subnet_id = "inspection_pri01", route_table_id = "firewall-rt"},
+    { id="4-2",subnet_id = "inspection_pri02", route_table_id = "firewall-rt"},
+    { id="4-3",subnet_id = "inspection_tx01", route_table_id = "inspection-rt_az1" },
+    { id="4-4",subnet_id = "inspection_tx02", route_table_id = "inspection-rt_az2" },
   ]
 }
-resource "aws_route_table" "example" {
+resource "aws_route_table" "hoge" {
   for_each          = { for rt in var.route_tables : rt.id => rt }
   vpc_id = aws_vpc.hoge["${each.value.vpc_id}"].id
   tags = {
@@ -156,15 +163,24 @@ resource "aws_route_table" "example" {
   }
 }
 resource "aws_route" "hoge" {
-  gateway_id             = aws_internet_gateway.example.id
-  route_table_id         = aws_route_table.example.id
-  destination_cidr_block = "0.0.0.0/0"
+  for_each          = { for route in var.routes : route.id => route }
+  egress_only_gateway_id    = lookup(each.value, "egress_only_gateway_id", null)
+  gateway_id                = lookup(each.value, "gateway_id", null) != null ? aws_internet_gateway.example.id:null
+  instance_id               = lookup(each.value, "instance_id", null)
+  nat_gateway_id            = lookup(each.value, "nat_gateway_id", null) != null ? aws_nat_gateway.example.id:null
+  network_interface_id      = lookup(each.value, "network_interface_id", null)
+  transit_gateway_id        = lookup(each.value, "transit_gateway_id", null) != null ? aws_ec2_transit_gateway.hoge["${each.value.transit_gateway_id}"].id: null
+  vpc_endpoint_id           = lookup(each.value,"fw_vpc_endpoint_index" , null) #!= null ? element(aws_networkfirewall_firewall.example.firewall_status.sync_states,each.value.fw_vpc_endpoint_index).attachment.endpoint_id:null
+  vpc_peering_connection_id = lookup(each.value, "vpc_peering_connection_id", null)
+  route_table_id         = aws_route_table.hoge["${each.value.route_table_id}"].id
+  destination_cidr_block = (each.value.cidr_block != "" ? each.value.cidr_block:var.network_address_range)
+  depends_on                = [aws_route_table.hoge]
 }
 
 resource "aws_route_table_association" "example" {
   for_each          = { for as in var.route_table_associations : as.id => as }
   subnet_id      = aws_subnet.hoge["${each.value.subnet_id}"].id
-  route_table_id = each.value.route_table_id
+  route_table_id = aws_route_table.hoge["${each.value.route_table_id}"].id
 }
 
 # ====================
@@ -172,8 +188,9 @@ resource "aws_route_table_association" "example" {
 # Security Group
 #
 # ====================
-resource "aws_security_group" "example" {
-  vpc_id = aws_vpc.example.id
+resource "aws_security_group" "hoge" {
+  for_each             = { for vpc in var.vpcs : vpc.id => vpc }
+  vpc_id = aws_vpc.hoge["${each.value.id}"].id
   name   = "example"
   tags = {
     Name = "example"
@@ -182,28 +199,22 @@ resource "aws_security_group" "example" {
 
 # インバウンドルール(ssh接続用)
 resource "aws_security_group_rule" "in_ssh" {
-  security_group_id = aws_security_group.example.id
+  for_each             = { for vpc in var.vpcs : vpc.id => vpc }
+  security_group_id = aws_security_group.hoge["${each.value.id}"].id
   type              = "ingress"
-  cidr_blocks       = [aws_vpc.example.cidr_block]
+  cidr_blocks       = [var.network_address_range]
   from_port         = 22
   to_port           = 22
   protocol          = "tcp"
 }
-# インバウンドルール(db用)
-resource "aws_security_group_rule" "in_db" {
-  security_group_id = aws_security_group.example.id
-  type              = "ingress"
-  cidr_blocks       = [aws_vpc.example.cidr_block]
-  from_port         = 3389
-  to_port           = 3389
-  protocol          = "tcp"
-}
+
 
 # インバウンドルール(pingコマンド用)
 resource "aws_security_group_rule" "in_icmp" {
-  security_group_id = aws_security_group.example.id
+  for_each             = { for vpc in var.vpcs : vpc.id => vpc }
+  security_group_id = aws_security_group.hoge["${each.value.id}"].id
   type              = "ingress"
-  cidr_blocks       = [aws_vpc.example.cidr_block]
+  cidr_blocks       = [var.network_address_range]
   from_port         = -1
   to_port           = -1
   protocol          = "icmp"
@@ -211,7 +222,8 @@ resource "aws_security_group_rule" "in_icmp" {
 
 # アウトバウンドルール(全開放)
 resource "aws_security_group_rule" "out_all" {
-  security_group_id = aws_security_group.example.id
+  for_each             = { for vpc in var.vpcs : vpc.id => vpc }
+  security_group_id = aws_security_group.hoge["${each.value.id}"].id
   type              = "egress"
   cidr_blocks       = ["0.0.0.0/0"]
   from_port         = 0
