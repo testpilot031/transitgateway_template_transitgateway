@@ -45,23 +45,20 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 #     Name = "example"
 #   }
 # }
-# variable "firewall_endponts" {
-#   default=[
-#     {id="inspection_tx01",vpc_id="inspection",subnet_id="inspection_tx01"},
-#     {id="inspection_tx02",vpc_id="inspection",subnet_id="inspection_tx02"}
-#     ]
-# }
-# data "aws_vpc_endpoint" "firewall" {
-#   for_each             = { for fwep in var.firewall_endponts : fwep.id => fwep }
-#   vpc_id       = aws_vpc.hoge["${each.value.vpc_id}"].id
-#   # filter {
-#   #   name   = "subnet_ids"
-#   #   values = [aws_subnet.hoge["${each.value.subnet_id}"].id]
-#   # }
-#   tags = {
-#     "AWSNetworkFirewallManaged" = "true"
-#     "Firewall" = aws_networkfirewall_firewall.example.arn
-#   }
-
-#   depends_on = [aws_networkfirewall_firewall.example]
-# }
+variable "firewall_endponts" {
+  default = [
+    { id = "inspection_pri01", vpc_id = "inspection", subnet_id = "inspection_pri01" },
+    { id = "inspection_pri02", vpc_id = "inspection", subnet_id = "inspection_pri02" }
+  ]
+}
+data "aws_vpc_endpoint" "firewall" {
+  for_each = { for fwep in var.firewall_endponts : fwep.id => fwep }
+  vpc_id   = aws_vpc.hoge["${each.value.vpc_id}"].id
+  id = lookup({ for sync_state in tolist(aws_networkfirewall_firewall.example.firewall_status[0].sync_states) : sync_state.attachment[0].subnet_id => sync_state.attachment[0].endpoint_id
+  }, aws_subnet.hoge["${each.value.subnet_id}"].id, null)
+  tags = {
+    "AWSNetworkFirewallManaged" = "true"
+    "Firewall"                  = aws_networkfirewall_firewall.example.arn
+  }
+  depends_on = [aws_networkfirewall_firewall.example]
+}
