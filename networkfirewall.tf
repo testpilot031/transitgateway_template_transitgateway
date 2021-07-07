@@ -18,34 +18,60 @@ resource "aws_networkfirewall_firewall_policy" "example" {
   firewall_policy {
     stateless_default_actions          = ["aws:pass"]
     stateless_fragment_default_actions = ["aws:pass"]
-    # stateless_rule_group_reference {
-    #   priority     = 1
-    #   resource_arn = aws_networkfirewall_rule_group.example.arn
-    # }
+    stateless_rule_group_reference {
+      priority     = 1
+      resource_arn = aws_networkfirewall_rule_group.example.arn
+    }
   }
-
   tags = {
     Name = "example"
   }
 }
-# resource "aws_networkfirewall_rule_group" "example" {
-#   capacity = 100
-#   name     = "example"
-#   type     = "STATEFUL"
-#   rule_group {
-#     rules_source {
-#       rules_source_list {
-#         generated_rules_type = "ALLOWLIST"
-#         target_types         = ["HTTP_HOST"]
-#         targets              = ["test.example.com"]
-#       }
-#     }
-#   }
-#   tags = {
-#     Name = "example"
-#   }
-# }
-
+resource "aws_networkfirewall_rule_group" "example" {
+  capacity    = 1
+  name        = "permitt-any"
+  description = "Permits all traffic"
+  type        = "STATEFUL"
+  rule_group {
+    rules_source {
+      stateful_rule {
+        action = "PASS"
+        header {
+          source           = "ANY"
+          source_port      = "ANY"
+          destination      = "ANY"
+          destination_port = "ANY"
+          protocol         = "IP"
+          direction        = "ANY"
+        }
+        rule_option {
+          keyword = "sid:1"
+        }
+      }
+    }
+  }
+  tags = {
+    Name = "example"
+  }
+}
+# firewallのlog をcloudwatchに流すための設定
+resource "aws_networkfirewall_logging_configuration" "example" {
+  firewall_arn = aws_networkfirewall_firewall.example.arn
+  logging_configuration {
+    log_destination_config {
+      log_destination = {
+        logGroup = aws_cloudwatch_log_group.example.name
+      }
+      log_destination_type = "CloudWatchLogs"
+      log_type             = "FLOW"
+    }
+  }
+}
+# firewallのlog をcloudwatchに流すための設定
+resource "aws_cloudwatch_log_group" "example" {
+  name              = "firewall-log"
+  retention_in_days = 14
+}
 data "aws_vpc_endpoint" "firewall" {
   for_each = { for fwep in var.firewall_endponts : fwep.id => fwep }
   vpc_id   = aws_vpc.hoge["${each.value.vpc_id}"].id

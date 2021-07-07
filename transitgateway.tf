@@ -1,6 +1,3 @@
-
-
-
 resource "aws_ec2_transit_gateway" "hoge" {
   for_each                        = { for tgw in var.transitgateways : tgw.id => tgw }
   description                     = "!!! MUST delete in future, This is TEST ^^/ !!!"
@@ -34,8 +31,13 @@ resource "aws_ec2_transit_gateway_route_table_association" "example" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.hoge["${each.value.route_table_id}"].id
 }
 resource "aws_ec2_transit_gateway_vpc_attachment" "hoge" {
-  for_each           = { for at in var.vpc_attachments : at.id => at }
-  subnet_ids         = [for subnet_id in each.value.subnet_ids : aws_subnet.hoge["${subnet_id}"].id]
-  transit_gateway_id = aws_ec2_transit_gateway.hoge["${each.value.transit_gateway_id}"].id
-  vpc_id             = aws_vpc.hoge["${each.value.vpc_id}"].id
+  for_each                                        = { for at in var.vpc_attachments : at.id => at }
+  subnet_ids                                      = [for subnet_id in each.value.subnet_ids : aws_subnet.hoge["${subnet_id}"].id]
+  transit_gateway_id                              = aws_ec2_transit_gateway.hoge["${each.value.transit_gateway_id}"].id
+  vpc_id                                          = aws_vpc.hoge["${each.value.vpc_id}"].id
+  transit_gateway_default_route_table_association = false
+  transit_gateway_default_route_table_propagation = false
+  tags = {
+    Name = "${each.value.id}"
+  }
 }

@@ -73,7 +73,7 @@ resource "aws_route_table" "hoge" {
   for_each = { for rt in var.route_tables : rt.id => rt }
   vpc_id   = aws_vpc.hoge["${each.value.vpc_id}"].id
   tags = {
-    Name = "example"
+    Name = "${each.value.id}"
   }
 }
 resource "aws_route" "hoge" {
@@ -143,4 +143,44 @@ resource "aws_security_group_rule" "out_all" {
   from_port         = 0
   to_port           = 0
   protocol          = "-1"
+}
+# ====================
+#
+# endpoint
+#
+# ====================
+# ssm, ssmmessage, ec2message はEC2をssmで中に入るために必要な設定
+resource "aws_vpc_endpoint" "ssm" {
+  for_each          = { for instance in var.instances : instance.id => instance }
+  vpc_id            = aws_vpc.hoge["${each.value.vpc_id}"].id
+  service_name      = "com.amazonaws.${var.aws_region}.ssm"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = [aws_subnet.hoge["${each.value.subnet_id}"].id]
+  security_group_ids = [
+    aws_security_group.hoge["${each.value.vpc_id}"].id,
+  ]
+  private_dns_enabled = true
+
+}
+resource "aws_vpc_endpoint" "ssmmessage" {
+  for_each          = { for instance in var.instances : instance.id => instance }
+  vpc_id            = aws_vpc.hoge["${each.value.vpc_id}"].id
+  service_name      = "com.amazonaws.${var.aws_region}.ssmmessage"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = [aws_subnet.hoge["${each.value.subnet_id}"].id]
+  security_group_ids = [
+    aws_security_group.hoge["${each.value.vpc_id}"].id,
+  ]
+  private_dns_enabled = true
+}
+resource "aws_vpc_endpoint" "ec2message" {
+  for_each          = { for instance in var.instances : instance.id => instance }
+  vpc_id            = aws_vpc.hoge["${each.value.vpc_id}"].id
+  service_name      = "com.amazonaws.${var.aws_region}.ec2message"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = [aws_subnet.hoge["${each.value.subnet_id}"].id]
+  security_group_ids = [
+    aws_security_group.hoge["${each.value.vpc_id}"].id,
+  ]
+  private_dns_enabled = true
 }

@@ -13,10 +13,10 @@ variable "network_address_range" {
 }
 variable "vpcs" {
   default = [
-    { id = "inspection", cidr_block = "192.168.8.0/21", tags_Name = "inspection" },
-    { id = "hoge01", cidr_block = "192.168.16.0/21", tags_Name = "hoge01" },
-    { id = "hoge02", cidr_block = "192.168.24.0/21", tags_Name = "hoge02" },
-    { id = "hoge03", cidr_block = "192.168.32.0/21", tags_Name = "hoge03" }
+    { id = "inspection", cidr_block = "192.168.8.0/21", tags_Name = "inspection-vpc" },
+    { id = "hoge01", cidr_block = "192.168.16.0/21", tags_Name = "hoge01-vpc" },
+    { id = "hoge02", cidr_block = "192.168.24.0/21", tags_Name = "hoge02-vpc" },
+    { id = "hoge03", cidr_block = "192.168.32.0/21", tags_Name = "hoge03-vpc" }
   ]
 }
 variable "subnets" {

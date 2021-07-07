@@ -21,9 +21,4 @@ output "firewall_status3" {
   value = keys({ for sync_state in tolist(aws_networkfirewall_firewall.example.firewall_status[0].sync_states) : sync_state.attachment[0].subnet_id => sync_state.attachment[0].endpoint_id
   })
 }
-output "aws_subnet" {
-  value = aws_subnet.hoge["inspection_pri01"].id
-}
-# output "aws_vpc_endpoint" {
-#   value = data.aws_vpc_endpoint.firewall["inspection_tx01"]
-# }
+
